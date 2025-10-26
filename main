@@ -1,0 +1,160 @@
+using System;
+using System.Linq;
+
+namespace ColegioElCoyoteFeliz
+{
+    public struct Estudiante
+    {
+        public string Nombre;
+        public float NotaFinal;
+        public int Edad;
+        public char Sexo;
+    }
+
+    internal class Program
+    {
+        private const int MAX_ESTUDIANTES = 5;
+
+        static void Main(string[] args)
+        {
+            Estudiante[] estudiantes = new Estudiante[MAX_ESTUDIANTES];
+            int numEstudiantes = 0;
+
+            Console.WriteLine("--- COLEGIO EL COYOTE FELIZ: REGISTRO DE ESTUDIANTES ---");
+
+            while (numEstudiantes < MAX_ESTUDIANTES)
+            {
+                Console.WriteLine($"\nIngreso del Estudiante #{numEstudiantes + 1} (o escriba 'fin' en el nombre para terminar):");
+
+                Console.Write("Nombre del estudiante: ");
+                string tempNombre = Console.ReadLine();
+
+                if (string.Equals(tempNombre, "fin", StringComparison.OrdinalIgnoreCase))
+                {
+                    break;
+                }
+                estudiantes[numEstudiantes].Nombre = tempNombre;
+
+                estudiantes[numEstudiantes].NotaFinal = LeerNota();
+                estudiantes[numEstudiantes].Edad = LeerEdad();
+                estudiantes[numEstudiantes].Sexo = LeerSexo();
+
+                numEstudiantes++;
+            }
+
+            if (numEstudiantes == 0)
+            {
+                Console.WriteLine("\nNo se ingresó ningún estudiante. Fin del programa.");
+                return;
+            }
+
+            MostrarResultados(estudiantes, numEstudiantes);
+        }
+
+        static float LeerNota()
+        {
+            float nota;
+            Console.Write("Nota Final (0.0 a 10.0): ");
+            while (!float.TryParse(Console.ReadLine(), out nota) || nota < 0.0f || nota > 10.0f)
+            {
+                Console.Write("Nota inválida. Ingrese una nota entre 0.0 y 10.0: ");
+            }
+            return nota;
+        }
+
+        static int LeerEdad()
+        {
+            int edad;
+            Console.Write("Edad: ");
+            while (!int.TryParse(Console.ReadLine(), out edad) || edad <= 0)
+            {
+                Console.Write("Edad inválida. Ingrese una edad positiva: ");
+            }
+            return edad;
+        }
+
+        static char LeerSexo()
+        {
+            char sexo;
+            string input;
+            Console.Write("Sexo ('M' o 'F'): ");
+            do
+            {
+                input = Console.ReadLine().ToUpper();
+                if (input.Length == 1 && (input[0] == 'M' || input[0] == 'F'))
+                {
+                    sexo = input[0];
+                    return sexo;
+                }
+                Console.Write("Sexo inválido. Ingrese 'M' o 'F': ");
+            } while (true);
+        }
+
+        static void MostrarResultados(Estudiante[] estudiantes, int numEstudiantes)
+        {
+            Console.WriteLine("\n==================================================");
+            Console.WriteLine("--- RESULTADOS DE LOS CÁLCULOS ---");
+            Console.WriteLine("==================================================");
+
+            int hombresMayores = ContarHombresMayores18(estudiantes, numEstudiantes);
+            Console.WriteLine($"1. Cantidad de estudiantes masculinos mayores de 18: {hombresMayores}");
+
+            Estudiante? mujerMenorNota = EncontrarMujerMenorNota(estudiantes, numEstudiantes);
+            Console.Write("2. Estudiante mujer con la menor nota: ");
+            if (mujerMenorNota.HasValue)
+            {
+                Console.WriteLine($"{mujerMenorNota.Value.Nombre} con una nota de {mujerMenorNota.Value.NotaFinal:F1}");
+            }
+            else
+            {
+                Console.WriteLine("No se registraron estudiantes de sexo femenino.");
+            }
+
+            Console.Write("\n3. Ingrese el nombre del estudiante a buscar: ");
+            string nombreBuscar = Console.ReadLine();
+            bool encontrado = BuscarEstudiantePorNombre(estudiantes, numEstudiantes, nombreBuscar);
+
+            Console.Write($"Resultado de la búsqueda para '{nombreBuscar}': ");
+            if (encontrado)
+            {
+                Console.WriteLine("¡ESTUDIANTE ENCONTRADO!.");
+            }
+            else
+            {
+                Console.WriteLine("Estudiante NO ENCONTRADO.");
+            }
+
+            Console.WriteLine("\n--- FIN DEL PROGRAMA ---");
+        }
+
+        static int ContarHombresMayores18(Estudiante[] estudiantes, int numEstudiantes)
+        {
+            int contador = 0;
+            for (int i = 0; i < numEstudiantes; ++i)
+            {
+                if (estudiantes[i].Sexo == 'M' && estudiantes[i].Edad > 18)
+                {
+                    contador++;
+                }
+            }
+            return contador;
+        }
+
+        static Estudiante? EncontrarMujerMenorNota(Estudiante[] estudiantes, int numEstudiantes)
+        {
+            return estudiantes
+                .Take(numEstudiantes)
+                .Where(e => e.Sexo == 'F')
+                .OrderBy(e => e.NotaFinal)
+                .Cast<Estudiante?>()
+                .FirstOrDefault();
+        }
+
+        static bool BuscarEstudiantePorNombre(Estudiante[] estudiantes, int numEstudiantes, string nombreBuscar)
+        {
+            return estudiantes
+                .Take(numEstudiantes)
+                .Any(e => e.Nombre.IndexOf(nombreBuscar, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+    }
+}
